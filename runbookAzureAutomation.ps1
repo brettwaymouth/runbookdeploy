@@ -2,6 +2,7 @@
 #Uses a preconfigured AutomationConnection object (AzureRunAsConnection) for authentication
 #This object must be in place in your tenant with the appropriate role(s), and added as a connection asset in the
 #Azure Automation account being used.
+#Test
 
 Param(
  [string]$environmentName = "AzureUSGovernment",
