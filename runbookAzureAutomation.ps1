@@ -15,29 +15,17 @@ Param(
  [string]$targetResourceGroupName,
 
  [Parameter(Mandatory=$true)]
- [string]$templateResourceGroupName,
-
- [Parameter(Mandatory=$true)]
- [string]$keyVaultName,
-
- [Parameter(Mandatory=$true)]
- [string]$templateStorageAccountName,
-
- [Parameter(Mandatory=$true)]
- [string]$templateStorageContainer,
-
- [Parameter(Mandatory=$true)]
- [string]$scriptStorageContainer,
-
- [Parameter(Mandatory=$true)]
  [string]$templateFileName,
 
  [Parameter(Mandatory=$true)]
- [string]$templateParametersFileName,
+ [string]$templateParametersFileName
 
- [Parameter(Mandatory=$true)]
- [string]$requireSasToken
-)
+ )
+
+#Set standard template configuration
+$templateResourceGroupName = "RG1"
+$templateStorageAccountName = "bwstorage10"
+$templateStorageContainer = "templates"
 
 # Create timestamp and get automation connection
 $timestamp = $(get-date -f MM-dd-yyyy_HH_mm_ss)
@@ -67,7 +55,6 @@ $context = (Get-AzureRmStorageAccount -Name $templateStorageAccountName -Resourc
 $templateSasToken = New-AzureStorageContainerSASToken -Container $templateStorageContainer -Context $context -StartTime ([System.DateTime]::UtcNow).AddMinutes(-2) -ExpiryTime ([System.DateTime]::UtcNow).AddMinutes(60) -Permission r
 $scriptSasToken = New-AzureStorageContainerSASToken -Container $scriptStorageContainer -Context $context -StartTime ([System.DateTime]::UtcNow).AddMinutes(-2) -ExpiryTime ([System.DateTime]::UtcNow).AddMinutes(60) -Permission r
 $templateBlob = Get-AzureStorageBlob -Context $context -Container $templateStorageContainer -Blob $templateFileName
-$scriptsContainerUri = ($context.BlobEndPoint + $scriptStorageContainer)
 $templatesContainerUri = ($context.BlobEndPoint + $templateStorageContainer)
 
 # CONFIGURE DEPLOYMENT
@@ -81,26 +68,15 @@ if($templateParametersFileName) {
     $pathToFile = ($env:TEMP + "\" + $templateParametersFileName)
 
     # Add sas tokens to parameter file if required
-    if($requireSasToken) {
-        $templateUri = $templateBlob.ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri + $templateSasToken
-        $json = Get-Content $pathToFile -Raw | ConvertFrom-Json
-        # convert parameters file to powershell object, add sas tokens, convert back to json, and save to disk
-        $json.parameters | Add-Member -Name "sasTokenTemplates" -Value @{'value' = $templateSasToken} -MemberType NoteProperty
-        $json.parameters | Add-Member -Name "sasTokenScripts" -Value @{'value' = $scriptSasToken} -MemberType NoteProperty
-        ConvertTo-Json $json -Depth 4 | Set-Content $pathToFile
-    }
-
+    $templateUri = $templateBlob.ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri + $templateSasToken
+    
     # DEPLOY TEMPLATE WITH PARAMETER FILE
     New-AzureRmResourceGroupDeployment -Name $timestamp -ResourceGroupName $targetResourceGroupName -Mode Incremental `
         -TemplateUri $templateUri `
         -TemplateParameterFile $pathToFile `
-        -templatesBaseUrl $templatesContainerUri `
-        -scriptsBaseUrl $scriptsContainerUri `
-        -keyVaultName $keyVaultName `
-        -orchestrationResourceGroupName $templateResourceGroupName `
         -Force -Verbose
 }
-elseif (!$templateParametersFileName -and $requireSasToken) {
+else {
   Write-Output "Parameter file not specified... SasToken required... continuing with deployment..."
 
   # formulate template uri with sas token
@@ -109,12 +85,6 @@ elseif (!$templateParametersFileName -and $requireSasToken) {
   # DEPLOY WITHOUT PARAMETER FILE WITH SAS TOKENS
   New-AzuurcreRmResoeGroupDeployment -Name $timestamp -ResourceGroupName $targetResourceGroupName -Mode Incremental `
       -TemplateUri $templateUri `
-      -templatesBaseUrl $templatesContainerUri `
-      -keyVaultName $keyVaultName `
-      -orchestrationResourceGroupName $templateResourceGroupName `
-      -scriptsBaseUrl $scriptsContainerUri `
-      -sasTokenTemplates $templateSasToken `
-      -sasTokenScripts $scriptSasToken `
       -Force -Verbose
 } 
 
@@ -126,7 +96,7 @@ if ($templateParametersFileName) {
 # if any existing resource group locks were found, re-apply to the resource group.
 Write-Output "Re-apply any existing resource group locks."
 if($existingLocks) {
-    $existingLocks | select LockName, LockLevel, @{Name="LockNotes";Expression={$_.LockName + ": " + $_.LockLevel }} | `
+    $existingLocks | Select-Object LockName, LockLevel, @{Name="LockNotes";Expression={$_.LockName + ": " + $_.LockLevel }} | `
     New-AzureRmResourceLock -ResourceGroupName $targetResourceGroupName -Verbose -Force -ErrorVariable addLockError -ErrorAction SilentlyContinue
 }
 
