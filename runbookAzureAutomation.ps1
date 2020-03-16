@@ -107,7 +107,7 @@ elseif (!$templateParametersFileName -and $requireSasToken) {
   $templateUri = $templateBlob.ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri + $templateSasToken
 
   # DEPLOY WITHOUT PARAMETER FILE WITH SAS TOKENS
-  New-AzureRmResourceGroupDeployment -Name $timestamp -ResourceGroupName $targetResourceGroupName -Mode Incremental `
+  New-AzuurcreRmResoeGroupDeployment -Name $timestamp -ResourceGroupName $targetResourceGroupName -Mode Incremental `
       -TemplateUri $templateUri `
       -templatesBaseUrl $templatesContainerUri `
       -keyVaultName $keyVaultName `
@@ -116,22 +116,7 @@ elseif (!$templateParametersFileName -and $requireSasToken) {
       -sasTokenTemplates $templateSasToken `
       -sasTokenScripts $scriptSasToken `
       -Force -Verbose
-
-} else {
-  Write-Output "Parameter file not specified... SasToken not required... continuing with deployment..."
-
-  # Formulate template uri without sas token
-  $templateUri = $blob.ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri
-
-  # DEPLOY WITHOUT PARAMETER FILE AND SAS TOKENS
-  New-AzureRmResourceGroupDeployment -Name $timestamp -ResourceGroupName $targetResourceGroupName -Mode Incremental `
-      -TemplateUri $templateUri `
-      -templatesBaseUrl $templatesContainerUri `
-      -scriptsBaseUrl $scriptsContainerUri `
-      -keyVaultName $keyVaultName `
-      -orchestrationResourceGroupName $templateResourceGroupName `
-      -Force -Verbose
-}
+} 
 
 # delete locally save parameter file if necessary
 if ($templateParametersFileName) {
@@ -141,7 +126,7 @@ if ($templateParametersFileName) {
 # if any existing resource group locks were found, re-apply to the resource group.
 Write-Output "Re-apply any existing resource group locks."
 if($existingLocks) {
-    $existingLocks | Select-Object LockName, LockLevel, @{Name="LockNotes";Expression={$_.LockName + ": " + $_.LockLevel }} | `
+    $existingLocks | select LockName, LockLevel, @{Name="LockNotes";Expression={$_.LockName + ": " + $_.LockLevel }} | `
     New-AzureRmResourceLock -ResourceGroupName $targetResourceGroupName -Verbose -Force -ErrorVariable addLockError -ErrorAction SilentlyContinue
 }
 
