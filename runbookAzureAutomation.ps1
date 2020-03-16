@@ -53,9 +53,7 @@ if($removeLockError) {
 # Get storage context, shared access tokens, and template blob
 $context = (Get-AzureRmStorageAccount -Name $templateStorageAccountName -ResourceGroupName $templateResourceGroupName).Context
 $templateSasToken = New-AzureStorageContainerSASToken -Container $templateStorageContainer -Context $context -StartTime ([System.DateTime]::UtcNow).AddMinutes(-2) -ExpiryTime ([System.DateTime]::UtcNow).AddMinutes(60) -Permission r
-$scriptSasToken = New-AzureStorageContainerSASToken -Container $scriptStorageContainer -Context $context -StartTime ([System.DateTime]::UtcNow).AddMinutes(-2) -ExpiryTime ([System.DateTime]::UtcNow).AddMinutes(60) -Permission r
 $templateBlob = Get-AzureStorageBlob -Context $context -Container $templateStorageContainer -Blob $templateFileName
-$templatesContainerUri = ($context.BlobEndPoint + $templateStorageContainer)
 
 # CONFIGURE DEPLOYMENT
 if($templateParametersFileName) {
