@@ -5,25 +5,37 @@
 #Test
 
 Param(
- [string]$environmentName = "AzureUSGovernment",
  [Parameter(Mandatory=$true)]
  [string]$subscriptionId,
- [string]$location = "USGov Virginia",
+
+ [Parameter(Mandatory=$true)]
+ [string]$location,
+
  [Parameter(Mandatory=$true)]
  [string]$targetResourceGroupName,
+
  [Parameter(Mandatory=$true)]
  [string]$templateResourceGroupName,
+
  [Parameter(Mandatory=$true)]
  [string]$keyVaultName,
+
  [Parameter(Mandatory=$true)]
  [string]$templateStorageAccountName,
+
  [Parameter(Mandatory=$true)]
  [string]$templateStorageContainer,
+
  [Parameter(Mandatory=$true)]
  [string]$scriptStorageContainer,
+
  [Parameter(Mandatory=$true)]
  [string]$templateFileName,
+
+ [Parameter(Mandatory=$true)]
  [string]$templateParametersFileName,
+
+ [Parameter(Mandatory=$true)]
  [string]$requireSasToken
 )
 
@@ -32,7 +44,7 @@ $timestamp = $(get-date -f MM-dd-yyyy_HH_mm_ss)
 $conn = Get-AutomationConnection -Name 'AzureRunAsConnection'
 
 # Authenticate Azure account and set subscription
-Add-AzureRmAccount -ServicePrincipal -EnvironmentName $environmentName -TenantId $conn.TenantId -ApplicationId $conn.ApplicationId -CertificateThumbprint $conn.CertificateThumbprint
+Add-AzureRmAccount -ServicePrincipal -TenantId $conn.TenantId -ApplicationId $conn.ApplicationId -CertificateThumbprint $conn.CertificateThumbprint
 Select-AzureRmSubscription -SubscriptionId $subscriptionId
 
 # Create Resource group if it does not already exist
@@ -44,7 +56,7 @@ if(!$rg) {
 
 #Get a collection of any existing locks on the resource group, remove locks, store name and locklevel
 Write-Output "Get the collection of any existing resource group locks, and remove them."
-$existingLocks = Get-AzureRmResourceLock -ResourceGroupName $targetResourceGroupName | Select @{Name="LockName";Expression={$_.Name}}, @{Name="LockLevel";Expression={$_.Properties.Level}}
+$existingLocks = Get-AzureRmResourceLock -ResourceGroupName $targetResourceGroupName | Select-Object @{Name="LockName";Expression={$_.Name}}, @{Name="LockLevel";Expression={$_.Properties.Level}}
 $existingLocks | Remove-AzureRmResourceLock -ResourceGroupName $targetResourceGroupName -ErrorVariable removeLockError -ErrorAction SilentlyContinue -Force
 if($removeLockError) {
     $RemoveLockError | ForEach-Object {Write-Output $_.Exception.Message}
@@ -129,7 +141,7 @@ if ($templateParametersFileName) {
 # if any existing resource group locks were found, re-apply to the resource group.
 Write-Output "Re-apply any existing resource group locks."
 if($existingLocks) {
-    $existingLocks | select LockName, LockLevel, @{Name="LockNotes";Expression={$_.LockName + ": " + $_.LockLevel }} | `
+    $existingLocks | Select-Object LockName, LockLevel, @{Name="LockNotes";Expression={$_.LockName + ": " + $_.LockLevel }} | `
     New-AzureRmResourceLock -ResourceGroupName $targetResourceGroupName -Verbose -Force -ErrorVariable addLockError -ErrorAction SilentlyContinue
 }
 
