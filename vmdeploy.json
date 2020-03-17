@@ -77,7 +77,7 @@
   "variables": {
     "location": "[resourceGroup().location]",
     "networkSecurityGroupName": "[concat(parameters('vmName'), '-nsg')]",
-    "storageAccountName": "[concat(parameters('vmName'), '-sa')]",
+    "storageAccountName": "[concat(parameters('vmName'), 'sa')]",
     "nicName": "[concat(parameters('vmName'), '-nic')]",
     "publicIPAddressName": "[concat(parameters('vmName'), '-pip')]"
   },
