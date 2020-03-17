@@ -15,7 +15,7 @@
       "value": "Standard_A2_v2",
     },
     "vmName": {
-      "value": "bwvm01"
+      "value": "bwvm02"
     },
     "vnetName": {
       "value": "bwvnet1"
