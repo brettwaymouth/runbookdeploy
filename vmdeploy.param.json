@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "value": "srvadmin"
+    },
+    "adminPassword": {
+      "value": "Bpt99mvz5149!"
+    },
+    "dnsLabelPrefix": {
+      "value": "bwvm01"
+    },
+    "windowsOSVersion": {
+      "value": "2019-Datacenter"
+    },
+    "vmSize": {
+      "value": "Standard_A2_v2",
+    },
+    "vmName": {
+      "value": "bwvm01"
+    },
+    "vnetName": {
+      "value": "bwvnet1"
+    },
+    "vnetPrefix": {
+      "value": "10.0.0.0/16"
+    },
+    "subnetName": {
+      "value": "server"
+    },
+    "subnetPrefix": {
+      "value": "10.0.0.0/24"
+    }
+  }
+}
