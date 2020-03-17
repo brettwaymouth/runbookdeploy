@@ -8,9 +8,6 @@
     "adminPassword": {
       "value": "Bpt99mvz5149!"
     },
-    "dnsLabelPrefix": {
-      "value": "bwvm01"
-    },
     "windowsOSVersion": {
       "value": "2019-Datacenter"
     },
